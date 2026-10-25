@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ZZZ Tracker</title>
+<style>
+:root{--bg:#0b0c0e;--card:#15171b;--line:#262930;--ink:#f0efec;--ink2:#a9aab0;--mut:#6c6e75;--win:#c6f432;--lost:#ff7a3d;--a:#b77dff;--cur:#5b5e66}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);font:13px/1.3 "Segoe UI",system-ui,sans-serif}
+body{background:radial-gradient(1200px 500px at 85% -10%,#1f2a0a 0,transparent 60%),var(--bg);display:grid;place-items:center}
+.app{display:flex;flex-direction:column;gap:12px;padding:14px 18px;max-width:1280px}
+header{display:flex;align-items:center;gap:24px}
+h1{margin:0;font-size:22px;letter-spacing:.02em}h1 em{font-style:normal;color:var(--win)}
+.sub{color:var(--mut);font-size:12px}
+.kpis{display:flex;gap:22px;margin-left:auto}
+.k b{display:block;font-size:22px;font-variant-numeric:tabular-nums}.k b.hi{color:var(--win)}
+.k span{color:var(--ink2);font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+.btns{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+select{background:var(--card);border:1px solid var(--line);color:var(--ink2);border-radius:8px;padding:4px 6px;font:inherit;font-size:12px;margin-right:6px}
+button{background:none;border:1px solid var(--line);color:var(--ink2);border-radius:8px;padding:5px 10px;cursor:pointer;font:inherit;font-size:12px}
+button.go{border-color:var(--win);color:var(--win)}button:disabled{opacity:.5;cursor:wait}
+.msg{font-size:12px;color:var(--ink2);text-align:right;min-height:16px}
+.row{display:flex;gap:12px;align-items:stretch}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+h2{margin:0;font-size:15px}
+.st{display:flex;gap:10px;color:var(--ink2);font-size:12px;white-space:nowrap}.st b{color:var(--ink);font-variant-numeric:tabular-nums}
+.odds{color:var(--ink2);font-size:12px;margin:3px 0 0}.odds b{color:var(--win)}
+.lg{display:flex;gap:10px;font-size:11px;color:var(--ink2);margin:3px 0 0}.lg i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.plot{display:flex;gap:4px;align-items:flex-end;position:relative;border-bottom:1px solid var(--line);margin-top:auto;padding-top:56px}
+.grid{position:absolute;left:0;right:0;bottom:40px;pointer-events:none}
+.grid div{position:absolute;left:0;right:0;border-top:1px dashed var(--line);color:var(--mut);font-size:10px}
+.grid span{position:absolute;right:0;top:-13px}
+.col{width:54px;display:flex;flex-direction:column;align-items:center;z-index:1}
+.v{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;margin-bottom:2px}
+.av{width:42px;height:42px;flex:none;border-radius:50%;background:#22252b;border:2px solid var(--win);overflow:hidden;display:grid;place-items:center;font-weight:700;color:var(--ink2);margin-bottom:-10px;z-index:2;transition:transform .15s;cursor:default}
+.av img{width:100%;height:100%;object-fit:cover}.av:hover{transform:scale(1.12)}
+.lost .av{border-color:var(--lost)}.cur .av{border:2px dashed var(--cur);color:var(--mut);font-size:15px}
+.bar{width:20px;background:linear-gradient(180deg,var(--win),#7fa012);border-radius:4px 4px 0 0;min-height:12px;display:flex;flex-direction:column-reverse;align-items:center;gap:1px;padding:2px 0 12px;overflow:hidden}
+.lost .bar{background:linear-gradient(180deg,var(--lost),#b8471a)}
+.cur .bar{background:repeating-linear-gradient(135deg,var(--cur) 0 4px,transparent 4px 8px);border:1px solid var(--cur);border-bottom:0}
+.mini{width:14px;height:14px;flex:none;border-radius:50%;background:#2a2d34;border:1px solid var(--a);overflow:hidden;font-size:7px;font-weight:700;color:var(--ink2);display:grid;place-items:center;cursor:default}
+.mini img{width:100%;height:100%;object-fit:cover}.mini:hover{outline:2px solid var(--ink)}
+.more{font-size:9px;font-weight:700;color:#0b0c0e}
+.lbl{height:40px;width:100%;text-align:center;font-size:11px;line-height:1.2;padding-top:4px}
+.lbl div{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.lbl small{display:block;color:var(--mut);font-size:10px}
+.side{width:250px}.side h2{margin-bottom:8px}
+.ranks{display:flex;height:8px;border-radius:4px;overflow:hidden;margin:4px 0 6px;gap:2px}
+.rec{display:flex;flex-direction:column;gap:7px}
+.rec div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding-bottom:6px}
+.rec span{color:var(--ink2)}.rec b{text-align:right;font-variant-numeric:tabular-nums}
+.smalls{display:flex;gap:12px;align-items:flex-end}.sm{--px:1px}.sm .plot{padding-top:40px}.sm .col{width:40px}.sm .av{width:28px;height:28px;margin-bottom:-7px;font-size:11px}
+.sm .bar{width:12px;padding:0}.sm .lbl{height:20px;font-size:10px}.sm .lbl div{display:block;white-space:nowrap;text-overflow:ellipsis}.sm .lbl small{display:none}.sm .v{font-size:11px}
+.empty{padding:60px;text-align:center;color:var(--ink2);font-size:15px}
+.tip{position:fixed;pointer-events:none;background:#000e;border:1px solid var(--line);padding:8px 10px;border-radius:10px;font-size:12px;display:none;z-index:9;max-width:280px}
+.tip b{display:block;font-size:13px;margin-bottom:3px}.tip span{display:block;color:var(--ink2)}
+.tip .as{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}.tip .as .mini{width:20px;height:20px}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div class="tip" id="tip"></div>
+<script>
+const DATA = __HISTORY__;
+const TOKEN = '__TOKEN__';
+const ACCOUNTS = __ACCOUNTS__;
+const ENKA = 'https://raw.githubusercontent.com/EnkaNetwork/API-docs/master/store/zzz/';
+// Agentes del canal estándar; su motor-W característico es "14" + id sin el primer dígito.
+const STD_AGENTS = ['1021', '1041', '1101', '1141', '1181', '1211'];
+const STD = new Set([...STD_AGENTS, ...STD_AGENTS.map(id => '14' + id.slice(1))]);
+// Modelo de pity de la comunidad: tasa base, inicio del pity suave, garantía y alza por tirada.
+const PITY = {
+  agent: {base: .006, soft: 74, hard: 90, step: .06},
+  engine: {base: .01, soft: 65, hard: 80, step: .07},
+};
+const BANNERS = [
+  {k: '2', model: 'agent', featured: .5},
+  {k: '3', model: 'engine', featured: .75},
+  // Estándar y Bangboo solo se muestran en pequeño; no cuentan en totales ni récords.
+  {k: '1', model: 'agent', small: true},
+  {k: '5', model: 'engine', small: true},
+];
+const TXT = {
+  es: {
+    names: {1: 'Estándar', 2: 'Exclusiva', 3: 'Motor-W', 5: 'Bangboo'},
+    since: (d, u) => `Desde ${d}${u ? ' · UID ' + u : ''}`, pulls: 'tiradas', poly: 'polícromos',
+    sRank: 'rango S', exAvg: 'prom. exclusiva', fifty: '50/50 ganados/perdidos', next10: 'S en 10 tiradas', avg: 'prom.',
+    featured: 'Destacado', lost: 'Perdido 50/50', aRank: 'Rango A', now: 'Ahora', pity: 'pity',
+    odds: (p1, p10, e) => `Siguiente <b>${p1}</b> · en 10 <b>${p10}</b> · S en ~<b>${e}</b>`,
+    guar: ' · destacado <b>garantizado</b>',
+    tipS: (p, a) => `${p} tiradas · ${a} rango A`, won: '50/50 ganado', lostTip: '50/50 perdido',
+    tipNow: (n, h, a) => `${n} de ${h} tiradas sin S · ${a} rango A`, nextTip: p => `Siguiente tirada: ${p}`,
+    tipA: n => `Tirada ${n} del pity`,
+    rec: 'Récords', sRate: 'Tasa S', aRate: 'Tasa A', perA: 'Tiradas por A',
+    fast: 'S más rápido', slow: 'S más lento', avgAll: 'Pity S promedio', most: 'Más repetido',
+    month: 'Mes con más tiradas', day: 'Día con más tiradas', lang: 'English',
+    update: 'Actualizar historial', updating: 'Descargando…', added: n => n ? `${n} tiradas nuevas` : 'Sin tiradas nuevas',
+    errors: {empty: 'Esta cuenta aún no tiene tiradas.', nogame: 'Abre el juego en este PC y entra al historial de señales.', expired: 'Abre el historial de señales en el juego y vuelve a actualizar.', api: 'Sin conexión con HoYoverse. Intenta de nuevo.'},
+    empty: 'Abre el historial de señales en el juego y pulsa Actualizar historial.',
+  },
+  en: {
+    names: {1: 'Standard', 2: 'Exclusive', 3: 'W-Engine', 5: 'Bangboo'},
+    since: (d, u) => `Since ${d}${u ? ' · UID ' + u : ''}`, pulls: 'pulls', poly: 'polychromes',
+    sRank: 'S-rank', exAvg: 'exclusive avg.', fifty: '50/50 won/lost', next10: 'S within 10 pulls', avg: 'avg.',
+    featured: 'Featured', lost: 'Lost 50/50', aRank: 'A-rank', now: 'Now', pity: 'pity',
+    odds: (p1, p10, e) => `Next <b>${p1}</b> · within 10 <b>${p10}</b> · S in ~<b>${e}</b>`,
+    guar: ' · featured <b>guaranteed</b>',
+    tipS: (p, a) => `${p} pulls · ${a} A-rank`, won: '50/50 won', lostTip: '50/50 lost',
+    tipNow: (n, h, a) => `${n} of ${h} pulls without S · ${a} A-rank`, nextTip: p => `Next pull: ${p}`,
+    tipA: n => `Pull ${n} of the pity`,
+    rec: 'Records', sRate: 'S rate', aRate: 'A rate', perA: 'Pulls per A',
+    fast: 'Fastest S', slow: 'Slowest S', avgAll: 'Average S pity', most: 'Most repeated',
+    month: 'Busiest month', day: 'Busiest day', lang: 'Español',
+    update: 'Update history', updating: 'Downloading…', added: n => n ? `${n} new pulls` : 'No new pulls',
+    errors: {empty: 'This account has no pulls yet.', nogame: 'Open the game on this PC and go to the signal history.', expired: 'Open the signal history in the game and update again.', api: 'Could not reach HoYoverse. Try again.'},
+    empty: 'Open the signal history in the game and press Update history.',
+  },
+};
+let lang = 'en', msg = '';
+try { lang = (localStorage.getItem('lang') || navigator.language).startsWith('es') ? 'es' : 'en'; } catch {}
+const IMG = {}, TIPS = [], PX = 1.9;
+document.documentElement.style.setProperty("--px", PX + "px");
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
+const pct = x => (x * 100).toFixed(x < .1 ? 1 : 0) + '%';
+const date = ts => new Date(ts * 1000).toISOString().replace('T', ' ').slice(0, 16);
+const nameOf = id => esc(DATA.names[id] || id);
+const ini = id => (DATA.names[id] || id).split(/\s+/).map(w => w[0]).join('').slice(0, 2);
+const face = id => IMG[id] ? `<img src="${IMG[id]}" alt="" loading="lazy">` : esc(ini(id));
+const tip = html => `data-tip="${TIPS.push(html) - 1}"`;
+const rate = (m, n) => n >= m.hard ? 1 : Math.min(1, m.base + Math.max(0, n - m.soft + 1) * m.step);
+
+function odds(m, pend) {
+  let alive = 1, miss10 = 1, expected = 0;
+  for (let n = pend + 1; n <= m.hard; n++) {
+    const r = rate(m, n);
+    if (n <= pend + 10) miss10 *= 1 - r;
+    expected += alive;
+    alive *= 1 - r;
+  }
+  return {next: rate(m, pend + 1), within10: 1 - miss10, expected: Math.round(expected)};
+}
+
+// Cada fila: [id, item_id, rango (4=S, 3=A, 2=B), unix].
+function stats(b) {
+  const rows = DATA.pulls[b.k] || [], s = [];
+  let run = [];
+  const aOf = run => run.flatMap((r, i) => r[2] === 3 ? [{item: String(r[1]), n: i + 1, ts: r[3]}] : []);
+  for (const r of rows) {
+    run.push(r);
+    if (r[2] === 4) {
+      s.push({item: String(r[1]), ts: r[3], p: run.length, a: aOf(run), std: !!b.featured && STD.has(String(r[1]))});
+      run = [];
+    }
+  }
+  const m = PITY[b.model];
+  return {...b, m, rows, s, pend: run.length, pendA: aOf(run),
+    aCount: rows.filter(r => r[2] === 3).length,
+    avg: s.length ? (s.reduce((a, r) => a + r.p, 0) / s.length).toFixed(1) : '—',
+    odds: odds(m, run.length), guaranteed: !!(b.featured && s.length && s[s.length - 1].std)};
+}
+
+function minis(list, p, t) {
+  // Cabe una miniatura por cada 15 px de barra; el resto se resume en +n.
+  const room = Math.max(0, Math.floor((p * PX - 14) / 15));
+  const shown = list.length > room ? list.slice(0, Math.max(room - 1, 0)) : list;
+  const rest = list.length - shown.length;
+  return shown.map(a => `<div class="mini" ${tip(`<b>${nameOf(a.item)}</b><span>${t.tipA(a.n)}</span><span>${date(a.ts)}</span>`)}>${face(a.item)}</div>`).join('')
+    + (rest ? `<div class="more">+${rest}</div>` : '');
+}
+
+function smallCard(x, t) {
+  const h = x.m.hard, H = p => `calc(var(--px) * ${Math.min(p, h)})`;
+  const cols = x.s.map(r => `<div class="col">
+      <div class="v">${r.p}</div>
+      <div class="av" ${tip(`<b>${nameOf(r.item)}</b><span>${date(r.ts)}</span><span>${t.tipS(r.p, r.a.length)}</span>`)}>${face(r.item)}</div>
+      <div class="bar" style="height:${H(r.p)}"></div><div class="lbl"><div>${nameOf(r.item)}</div></div></div>`).join('');
+  const now = `<div class="col cur"><div class="v">${x.pend}</div><div class="av" ${tip(`<b>${t.now}</b><span>${t.tipNow(x.pend, h, x.pendA.length)}</span>`)}>?</div>
+      <div class="bar" style="height:${H(x.pend)}"></div><div class="lbl"><div>${t.now}</div></div></div>`;
+  return `<section class="card sm"><div class="top"><h2>${t.names[x.k]}</h2>
+      <div class="st"><span><b>${x.rows.length}</b> ${t.pulls}</span><span><b>${x.s.length}</b> S</span></div></div>
+    <div class="plot">${cols}${now}</div></section>`;
+}
+
+function card(x, t) {
+  const h = x.m.hard, H = p => `calc(var(--px) * ${Math.min(p, h)})`;
+  const aList = a => a.length ? `<div class="as">${a.map(r => `<div class="mini">${face(r.item)}</div>`).join('')}</div>` : '';
+  const cols = x.s.map(r => `<div class="col${r.std ? ' lost' : ''}">
+      <div class="v">${r.p}</div>
+      <div class="av" ${tip(`<b>${nameOf(r.item)}</b><span>${date(r.ts)}</span><span>${t.tipS(r.p, r.a.length)}</span>${x.featured ? `<span>${r.std ? t.lostTip : t.won}</span>` : ''}${aList(r.a)}`)}>${face(r.item)}</div>
+      <div class="bar" style="height:${H(r.p)}">${minis(r.a, r.p, t)}</div>
+      <div class="lbl"><div>${nameOf(r.item)}</div><small>${date(r.ts).slice(5, 10).replace('-', '/')}</small></div></div>`).join('');
+  const now = `<div class="col cur"><div class="v">${x.pend}</div>
+      <div class="av" ${tip(`<b>${t.now}</b><span>${t.tipNow(x.pend, h, x.pendA.length)}</span><span>${t.nextTip(pct(x.odds.next))}</span>${aList(x.pendA)}`)}>?</div>
+      <div class="bar" style="height:${H(x.pend)}">${minis(x.pendA, x.pend, t)}</div><div class="lbl"><div>${t.now}</div><small>${t.pity}</small></div></div>`;
+  const grid = [h / 2, h].map(g => `<div style="bottom:${H(g)}"><span>${g}</span></div>`).join('');
+  const legend = `<div class="lg">${x.featured ? `<span><i style="background:var(--win)"></i>${t.featured}</span><span><i style="background:var(--lost)"></i>${t.lost}</span>` : ''}<span><i style="background:var(--a)"></i>${t.aRank}</span></div>`;
+  return `<section class="card">
+    <div class="top"><h2>${t.names[x.k]}</h2>
+      <div class="st"><span><b>${x.rows.length}</b> ${t.pulls}</span><span><b>${x.s.length}</b> S</span><span><b>${x.aCount}</b> A</span><span>${t.avg} <b>${x.avg}</b></span></div></div>
+    <div class="odds">${t.odds(pct(x.odds.next), pct(x.odds.within10), x.odds.expected)}${x.guaranteed ? t.guar : ''}</div>${legend}
+    <div class="plot"><div class="grid">${grid}</div>${cols}${now}</div></section>`;
+}
+
+function records(all, t) {
+  const rows = all.flatMap(x => x.rows), total = rows.length;
+  const [S, A, B] = [4, 3, 2].map(r => rows.filter(x => x[2] === r).length);
+  const ss = all.flatMap(x => x.s), by = ss.slice().sort((a, b) => a.p - b.p);
+  const top = list => Object.entries(list.reduce((o, k) => (o[k] = (o[k] || 0) + 1, o), {})).sort((a, b) => b[1] - a[1])[0];
+  const reps = top(ss.map(r => r.item)), month = top(rows.map(r => date(r[3]).slice(0, 7))), day = top(rows.map(r => date(r[3]).slice(0, 10)));
+  const line = (k, v) => `<div><span>${k}</span><b>${v}</b></div>`;
+  return `<section class="card side"><h2>${t.rec}</h2>
+    <div class="st" style="justify-content:space-between"><span><b>${S}</b> S</span><span><b>${A}</b> A</span><span><b>${B}</b> B</span></div>
+    <div class="ranks"><i style="flex:${S};background:var(--win)"></i><i style="flex:${A};background:var(--a)"></i><i style="flex:${B};background:var(--cur)"></i></div>
+    <div class="rec">
+      ${line(t.sRate, pct(S / total))}${line(t.aRate, pct(A / total))}${line(t.perA, (total / A).toFixed(1))}
+      ${line(t.avgAll, (ss.reduce((a, r) => a + r.p, 0) / ss.length).toFixed(1))}
+      ${line(t.fast, `${nameOf(by[0].item)} · ${by[0].p}`)}
+      ${line(t.slow, `${nameOf(by.at(-1).item)} · ${by.at(-1).p}`)}
+      ${line(t.most, `${nameOf(reps[0])} ×${reps[1]}`)}
+      ${line(t.month, `${month[0]} · ${month[1]}`)}${line(t.day, `${day[0].slice(5)} · ${day[1]}`)}
+    </div></section>`;
+}
+
+function render() {
+  const t = TXT[lang], every = BANNERS.map(stats), all = every.filter(x => !x.small), ex = all[0];
+  const total = all.reduce((a, x) => a + x.rows.length, 0);
+  TIPS.length = 0;
+  document.documentElement.lang = lang;
+  const pick = ACCOUNTS.length > 1 ? `<select id="acc">${ACCOUNTS.map(u => `<option${u === DATA.uid ? ' selected' : ''}>${esc(u)}</option>`).join('')}</select>` : '';
+  const btns = `<div class="btns">${TOKEN ? `<button class="go" id="upd">${t.update}</button>` : ''}<div>${pick}<button id="lang">${t.lang}</button></div></div>`;
+  let head = `<header><div><h1>ZZZ <em>Tracker</em></h1><div class="sub">`;
+  if (!every.some(x => x.rows.length)) {
+    $('app').innerHTML = `${head}</div></div><div style="margin-left:auto"></div>${btns}</header><div class="msg">${esc(msg)}</div><div class="card empty">${t.empty}</div>`;
+  } else {
+    const sTotal = all.reduce((a, x) => a + x.s.length, 0), lost = ex.s.filter(r => r.std).length;
+    const first = Math.min(...every.flatMap(x => x.rows.map(r => r[3])));
+    const kpis = [[total.toLocaleString(lang), t.pulls], [(total * 160).toLocaleString(lang), t.poly], [sTotal, t.sRank],
+      [ex.avg, t.exAvg], [`${ex.s.length - lost}/${lost}`, t.fifty], [pct(ex.odds.within10), t.next10]];
+    $('app').innerHTML = `${head}${t.since(date(first).slice(0, 10), esc(DATA.uid))}</div></div>
+        <div class="kpis">${kpis.map(([v, l], i) => `<div class="k"><b class="${i === 5 ? 'hi' : ''}">${v}</b><span>${l}</span></div>`).join('')}</div>
+        ${btns}</header><div class="msg" style="margin-top:-10px">${esc(msg)}</div>
+      <div class="row">${card(ex, t)}${records(all, t)}</div>
+      <div class="row">${all.slice(1).map(x => card(x, t)).join('')}<div class="smalls">${every.filter(x => x.small).map(x => smallCard(x, t)).join('')}</div></div>`;
+  }
+  $('lang').onclick = () => {
+    lang = lang === 'es' ? 'en' : 'es';
+    try { localStorage.setItem('lang', lang); } catch {}
+    render();
+  };
+  if ($('upd')) $('upd').onclick = update;
+  if ($('acc')) $('acc').onchange = e => location.href = '/?uid=' + e.target.value;
+}
+
+async function update() {
+  const t = TXT[lang], btn = $('upd');
+  btn.disabled = true;
+  btn.textContent = t.updating;
+  try {
+    const res = await (await fetch('/update', {method: 'POST', headers: {'X-Token': TOKEN}})).json();
+    if (res.error) throw new Error(res.error);
+    sessionStorage.setItem('msg', t.added(res.added));
+    location.href = '/?uid=' + res.uid;
+  } catch (e) {
+    msg = t.errors[e.message] || t.errors.api;
+    render();
+  }
+}
+
+document.addEventListener('mousemove', e => {
+  const el = e.target.closest('[data-tip]'), box = $('tip');
+  if (!el) return box.style.display = 'none';
+  box.innerHTML = TIPS[el.dataset.tip];
+  box.style.display = 'block';
+  const r = box.getBoundingClientRect();
+  box.style.left = Math.min(e.clientX + 14, innerWidth - r.width - 8) + 'px';
+  box.style.top = Math.min(e.clientY + 14, innerHeight - r.height - 8) + 'px';
+});
+try { msg = sessionStorage.getItem('msg') || ''; sessionStorage.removeItem('msg'); } catch {}
+render();
+Promise.all(['avatars.json', 'weapons.json'].map(f => fetch(ENKA + f).then(r => r.json())))
+  .then(([av, w]) => {
+    for (const [id, a] of Object.entries(av)) if (a.CircleIcon) IMG[id] = 'https://enka.network' + a.CircleIcon;
+    for (const [id, x] of Object.entries(w)) if (x.ImagePath) IMG[id] = 'https://enka.network' + x.ImagePath;
+    render();
+  })
+  .catch(() => {});
+</script>
+</body>
+</html>
